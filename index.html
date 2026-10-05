@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#d9481f">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body><title>Fierro en Casa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: una columna tipo app de bolsillo; marcador de gimnasio arriba, rutina del día en tarjetas, barra de pestañas abajo. Tezontle (rojo volcánico de Puebla) como acento, azul talavera para XP. */
+:root{
+  --bg:#eceff2; --surface:#ffffff; --surface-2:#f5f7f9; --ink:#15191e; --muted:#58626d; --line:#d3d9df;
+  --accent:#d9481f; --accent-ink:#ffffff; --accent-soft:#fbe4dc;
+  --xp:#1d4c9e; --xp-soft:#dfe8f8; --good:#1b7f45; --good-soft:#dcf2e4; --warn:#a86400;
+  --stage:#0f1215;
+  --f-display:"Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#101317; --surface:#191e24; --surface-2:#20262d; --ink:#eef1f4; --muted:#9aa5b0; --line:#2c343d;
+  --accent:#ff6a3d; --accent-ink:#1a0d08; --accent-soft:#3a1f16;
+  --xp:#7aa2ff; --xp-soft:#1c2740; --good:#4fc684; --good-soft:#163024; --warn:#f0b04a; --stage:#07090b;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#101317; --surface:#191e24; --surface-2:#20262d; --ink:#eef1f4; --muted:#9aa5b0; --line:#2c343d;
+  --accent:#ff6a3d; --accent-ink:#1a0d08; --accent-soft:#3a1f16;
+  --xp:#7aa2ff; --xp-soft:#1c2740; --good:#4fc684; --good-soft:#163024; --warn:#f0b04a; --stage:#07090b;
+  color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.45; -webkit-tap-highlight-color:transparent}
+button{font:inherit; color:inherit; cursor:pointer}
+button:focus-visible, input:focus-visible{outline:3px solid var(--xp); outline-offset:2px}
+.app{max-width:560px; margin:0 auto; padding-inline:16px; padding-block:14px calc(96px + env(safe-area-inset-bottom,0px)); display:flex; flex-direction:column; gap:16px}
+.num{font-family:var(--f-display); font-variant-numeric:tabular-nums; letter-spacing:.01em}
+h1,h2,h3{margin:0; text-wrap:balance}
+.eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:600}
+
+/* Marcador */
+.board{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center}
+.lvl{width:62px; height:62px; border-radius:12px; background:var(--xp); color:var(--surface); display:grid; place-items:center; line-height:1}
+.lvl small{display:block; font-family:var(--f-body); font-size:9px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; opacity:.85}
+.lvl b{font-family:var(--f-display); font-size:34px; font-weight:900}
+.who{min-width:0}
+.who h1{font-family:var(--f-display); font-weight:800; font-size:24px; line-height:1; text-transform:uppercase}
+.bar{height:8px; border-radius:99px; background:var(--xp-soft); overflow:hidden; margin-top:8px}
+.bar > i{display:block; height:100%; background:var(--xp); border-radius:99px; transition:width .5s ease}
+.xpline{font-size:12px; color:var(--muted); margin-top:4px}
+.streak{text-align:center; min-width:58px}
+.streak .num{font-size:34px; font-weight:900; line-height:.9; color:var(--accent)}
+.streak span{display:block; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); font-weight:700}
+.flame{width:18px; height:18px; vertical-align:-3px}
+
+/* Días */
+.days{display:grid; grid-template-columns:repeat(7,1fr); gap:6px}
+.day{border:1px solid var(--line); background:var(--surface); border-radius:10px; padding:6px 0 7px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:3px}
+.day b{font-size:12px; font-weight:700}
+.day i{width:7px; height:7px; border-radius:50%; background:var(--line)}
+.day.done i{background:var(--good)} .day.part i{background:var(--warn)} .day.rest i{background:transparent; border:1px solid var(--line)}
+.day.sel{border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink)}
+.day.today b{color:var(--accent)}
+
+.dayhead{display:flex; justify-content:space-between; align-items:flex-end; gap:12px}
+.dayhead h2{font-family:var(--f-display); font-size:34px; font-weight:900; line-height:.95; text-transform:uppercase}
+.dayhead .pct{font-size:13px; color:var(--muted); text-align:right; flex-shrink:0}
+.dayhead .pct .num{font-size:28px; color:var(--ink); font-weight:800; display:block; line-height:1}
+
+.list{display:flex; flex-direction:column; gap:10px}
+.ex{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:12px 14px; display:flex; flex-direction:column; gap:10px}
+.ex.complete{border-color:color-mix(in srgb, var(--good) 45%, var(--line))}
+.exrow{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+.exrow h3{font-size:16px; font-weight:700}
+.exrow p{margin:2px 0 0; font-size:12.5px; color:var(--muted)}
+.tag{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; padding:3px 7px; border-radius:6px; white-space:nowrap; flex-shrink:0}
+.tag.cam{background:var(--accent-soft); color:var(--accent)}
+.tag.time{background:var(--xp-soft); color:var(--xp)}
+.tag.man{background:var(--surface-2); color:var(--muted); border:1px solid var(--line)}
+.sets{display:flex; flex-wrap:wrap; gap:8px}
+.set{min-width:58px; border:1.5px dashed var(--line); background:var(--surface-2); border-radius:10px; padding:6px 8px; text-align:center; line-height:1.1}
+.set .num{font-size:20px; font-weight:800}
+.set small{display:block; font-size:10px; color:var(--muted); font-weight:600; letter-spacing:.04em}
+.set.ok{border:1.5px solid var(--good); background:var(--good-soft)}
+.set.ok .num{color:var(--good)}
+.set.half{border:1.5px solid var(--warn)}
+.restcard{background:var(--surface); border:1px dashed var(--line); border-radius:var(--r); padding:22px 16px; text-align:center; color:var(--muted)}
+.restcard h3{color:var(--ink); font-family:var(--f-display); font-size:26px; text-transform:uppercase; margin-bottom:4px}
+.hint{font-size:12.5px; color:var(--muted)}
+
+/* Retos y progreso */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r); padding:14px 16px; display:flex; flex-direction:column; gap:10px}
+.sectitle{font-family:var(--f-display); font-size:30px; font-weight:900; text-transform:uppercase; line-height:1}
+.chal{display:flex; flex-direction:column; gap:8px; padding-block:4px}
+.chal + .chal{border-top:1px solid var(--line); padding-top:12px}
+.chal .top{display:flex; justify-content:space-between; gap:10px; align-items:baseline}
+.chal b{font-size:15px}
+.chal .bar{margin-top:0; height:10px; background:var(--accent-soft)}
+.chal .bar > i{background:var(--accent)}
+.chal.claimed .bar > i{background:var(--good)}
+.btn{border:0; border-radius:11px; padding:11px 16px; font-weight:700; font-size:15px; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px}
+.btn.primary{background:var(--accent); color:var(--accent-ink)}
+.btn.blue{background:var(--xp); color:var(--surface)}
+.btn.ghost{background:var(--surface-2); border:1px solid var(--line)}
+.btn:disabled{opacity:.45; cursor:default}
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.stat{background:var(--surface-2); border-radius:10px; padding:10px; text-align:center}
+.stat .num{font-size:28px; font-weight:900; line-height:1}
+.stat span{font-size:11px; color:var(--muted); font-weight:600}
+.cal{display:grid; grid-template-columns:repeat(7,1fr); gap:5px}
+.cal div{aspect-ratio:1; border-radius:7px; background:var(--surface-2); border:1px solid var(--line); font-size:11px; display:grid; place-items:center; color:var(--muted); max-width:100%}
+.cal .c-done{background:var(--good); border-color:var(--good); color:var(--surface)}
+.cal .c-part{background:var(--warn); border-color:var(--warn); color:var(--surface)}
+.cal .c-rest{background:transparent; border-style:dashed}
+.cal .c-future{opacity:.4}
+.cal .c-today{outline:2px solid var(--ink); outline-offset:1px}
+.calhead{display:grid; grid-template-columns:repeat(7,1fr); gap:5px; font-size:10px; text-align:center; color:var(--muted); font-weight:700}
+.legend{display:flex; flex-wrap:wrap; gap:12px; font-size:11.5px; color:var(--muted)}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px}
+.recs{display:flex; flex-direction:column}
+.recs div{display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:14px}
+.recs div:last-child{border-bottom:0}
+.recs .num{font-size:20px; font-weight:800}
+
+/* Pestañas */
+.tabs{position:fixed; left:0; right:0; bottom:0; background:var(--surface); border-top:1px solid var(--line); padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px)); z-index:5}
+.tabs nav{max-width:560px; margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:6px}
+.tabs button{border:0; background:none; padding:7px 0; border-radius:10px; font-weight:700; font-size:13px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:2px}
+.tabs button svg{width:22px; height:22px}
+.tabs button[aria-selected="true"]{color:var(--accent); background:var(--accent-soft)}
+
+/* Contador */
+.counter{position:fixed; inset:0; z-index:20; background:var(--bg); overflow-y:auto; padding-block:calc(10px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px)); padding-inline:16px}
+.cwrap{max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:12px}
+.chead{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.chead h2{font-family:var(--f-display); font-size:26px; font-weight:900; text-transform:uppercase; line-height:1}
+.close{width:44px; height:44px; border-radius:50%; border:1px solid var(--line); background:var(--surface); font-size:22px; line-height:1; flex-shrink:0}
+.stage{position:relative; width:100%; aspect-ratio:3/4; max-height:58vh; border-radius:16px; overflow:hidden; background:var(--stage); max-width:100%}
+.stage video,.stage canvas{position:absolute; inset:0; width:100%; height:100%; object-fit:contain}
+.stage.mirror video,.stage.mirror canvas{transform:scaleX(-1)}
+.overlay{position:absolute; left:0; right:0; bottom:0; padding:14px; display:flex; justify-content:space-between; align-items:flex-end; background:linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,0)); color:#fff; pointer-events:none}
+.big{font-family:var(--f-display); font-weight:900; font-size:88px; line-height:.8; font-variant-numeric:tabular-nums}
+.big small{font-size:34px; opacity:.7; font-weight:800}
+.left{text-align:right; font-weight:700; font-size:15px}
+.left .num{display:block; font-size:44px; line-height:.9; color:#ffb199}
+.idle{position:absolute; inset:0; display:grid; place-items:center; text-align:center; color:#c9d0d7; padding:24px; font-size:14px}
+.idle svg{width:120px; height:auto; opacity:.9; margin-bottom:8px}
+.status{font-size:13.5px; color:var(--muted); min-height:20px}
+.status.err{color:var(--accent); font-weight:600}
+.status.ok{color:var(--good); font-weight:600}
+.crow{display:flex; gap:8px; flex-wrap:wrap}
+.crow .btn{flex:1 1 140px}
+.adj{display:grid; grid-template-columns:1fr 1fr 2fr; gap:8px}
+.adj .btn{font-size:20px}
+.timerbig{font-family:var(--f-display); font-size:120px; font-weight:900; color:#fff; line-height:1; font-variant-numeric:tabular-nums}
+.done-flash{animation:flash .7s ease}
+@keyframes flash{0%{box-shadow:0 0 0 0 var(--good)}100%{box-shadow:0 0 0 18px transparent}}
+.toast{position:fixed; left:50%; bottom:calc(86px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--ink); color:var(--bg); padding:10px 16px; border-radius:10px; font-weight:600; font-size:14px; z-index:30; max-width:calc(100% - 32px); text-align:center}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="app" id="app">
+  <section class="board" aria-label="Tu nivel">
+    <div class="lvl"><div><small>Nivel</small><b id="lvlNum">1</b></div></div>
+    <div class="who">
+      <h1 id="lvlTitle">Novato del patio</h1>
+      <div class="bar" aria-hidden="true"><i id="xpBar" style="width:0%"></i></div>
+      <div class="xpline"><span class="num" id="xpNow">0</span> XP · faltan <span id="xpLeft">150</span> para subir</div>
+    </div>
+    <div class="streak" title="Días de entreno seguidos">
+      <div class="num" id="streak">0</div>
+      <span><svg class="flame" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 2c1 3.5-2.5 5-2.5 8.5 0 1.5 1 2.5 2 2.5-1.8-2 .5-4.5 2-5.5.3 3 3.5 4 3.5 7.5A5 5 0 0 1 12 20a5.5 5.5 0 0 1-5.5-5.5C6.5 8.5 12 7 12 2z"/></svg> racha</span>
+    </div>
+  </section>
+
+  <main id="viewHoy">
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div class="days" id="days" role="tablist" aria-label="Día de la semana"></div>
+      <div class="dayhead">
+        <div><div class="eyebrow" id="dayEyebrow">Hoy</div><h2 id="dayTitle">Pierna y glúteo</h2></div>
+        <div class="pct"><span class="num" id="dayPct">0%</span>del día</div>
+      </div>
+      <div class="list" id="exList"></div>
+      <p class="hint">Toca una serie para contarla. Las que dicen <b>cámara</b> las cuenta la app viendo tus movimientos. Cada repetición da 1 XP, cada serie completa 10 y el día completo 50.</p>
+    </div>
+  </main>
+
+  <main id="viewRetos" hidden>
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div><div class="eyebrow" id="weekLabel">Esta semana</div><h2 class="sectitle">Retos semanales</h2></div>
+      <div class="card" id="chalList"></div>
+      <p class="hint">Cada lunes salen 3 retos nuevos. Completa uno y cóbralo por 150 XP.</p>
+    </div>
+  </main>
+
+  <main id="viewProg" hidden>
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <h2 class="sectitle">Tu progreso</h2>
+      <div class="stats">
+        <div class="stat"><div class="num" id="stDays">0</div><span>días completos</span></div>
+        <div class="stat"><div class="num" id="stReps">0</div><span>repeticiones</span></div>
+        <div class="stat"><div class="num" id="stBest">0</div><span>mejor racha</span></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Últimas 4 semanas</div>
+        <div class="calhead"><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+        <div class="cal" id="cal"></div>
+        <div class="legend"><span><i style="background:var(--good)"></i>Completo</span><span><i style="background:var(--warn)"></i>A medias</span><span><i style="border:1px dashed var(--line)"></i>Descanso</span></div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Récords (más reps en una serie)</div>
+        <div class="recs" id="recs"></div>
+      </div>
+      <p class="hint" id="syncNote">Tu progreso se guarda en este cel (en este navegador).</p>
+    </div>
+  </main>
+</div>
+
+<div class="tabs"><nav role="tablist">
+  <button id="tabHoy" role="tab" aria-selected="true" data-view="viewHoy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9v6M6 6v12M18 6v12M21 9v6M6 12h12"/></svg>Entreno</button>
+  <button id="tabRetos" role="tab" aria-selected="false" data-view="viewRetos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>Retos</button>
+  <button id="tabProg" role="tab" aria-selected="false" data-view="viewProg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progreso</button>
+</nav></div>
+
+<section class="counter" id="counter" hidden aria-label="Contador">
+  <div class="cwrap">
+    <div class="chead">
+      <div><div class="eyebrow" id="cSet">Serie 1 de 4</div><h2 id="cName">Sentadilla</h2></div>
+      <button class="close" id="cClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="stage" id="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="canvas"></canvas>
+      <div class="idle" id="idle">
+        <div>
+          <svg viewBox="0 0 120 120" fill="none" stroke="#ff8a63" stroke-width="4" stroke-linecap="round"><circle cx="60" cy="20" r="9" fill="#ff8a63"/><path d="M60 30v34M40 44l20-6 20 6M40 44l-6 20M80 44l6 20M60 64l-14 22-2 24M60 64l14 22 2 24"/><g fill="#fff" stroke="none"><circle cx="60" cy="38" r="4"/><circle cx="40" cy="44" r="4"/><circle cx="80" cy="44" r="4"/><circle cx="46" cy="86" r="4"/><circle cx="74" cy="86" r="4"/><circle cx="60" cy="64" r="4"/></g></svg>
+          <div id="idleText">Pon el cel a 2 o 3 metros, de lado, que se vea todo tu cuerpo.</div>
+        </div>
+      </div>
+      <div class="overlay" id="ovl">
+        <div class="big"><span id="cCount">0</span><small>/<span id="cTarget">8</span></small></div>
+        <div class="left"><span class="num" id="cLeft">8</span>faltan</div>
+      </div>
+    </div>
+    <div class="status" id="cStatus"></div>
+    <div class="crow" id="camBtns">
+      <button class="btn primary" id="bLive"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cámara en vivo</button>
+      <label class="btn blue" for="fileVid" style="cursor:pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>Grabar serie</label>
+      <input type="file" id="fileVid" accept="video/*" capture="user" hidden>
+    </div>
+    <div class="crow" id="timeBtns" hidden>
+      <button class="btn primary" id="bTime">Empezar</button>
+    </div>
+    <div class="adj">
+      <button class="btn ghost" id="bMinus" aria-label="Quitar una">−1</button>
+      <button class="btn ghost" id="bPlus" aria-label="Sumar una">+1</button>
+      <button class="btn primary" id="bSave">Guardar serie</button>
+    </div>
+    <p class="hint" id="cTip"></p>
+  </div>
+</section>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+// ---------- Rutina ----------
+const EX = {
+  sentadilla:{n:"Sentadilla con barra 10 kg", m:"cam", j:"knee", down:100, up:155, tip:"Ponte de lado a la cámara. Cuenta cuando bajas y vuelves a subir derecho."},
+  bulgara:{n:"Sentadilla búlgara", m:"cam", j:"knee", down:100, up:150, note:"por pierna", tip:"De lado, pie de atrás en la silla. Haz una pierna y luego la otra."},
+  hipthrust:{n:"Hip thrust con barra", m:"cam", j:"hip", down:125, up:160, tip:"Cámara de lado y a la altura del suelo. Cuenta cuando subes la cadera hasta quedar recto."},
+  zancadas:{n:"Zancadas caminando", m:"cam", j:"knee", down:105, up:150, note:"pasos", tip:"Camina de lado a la cámara. Cada paso que bajas cuenta uno."},
+  pantorrilla:{n:"Pantorrilla parado", m:"man", tip:"El movimiento es muy chico para la cámara: cuenta tú con +1 o toca Guardar al terminar."},
+  lag_decl:{n:"Lagartijas declinadas", m:"cam", j:"elbow", down:95, up:150, note:"pies en silla", tip:"Cámara de lado, en el piso. Baja hasta que el codo quede en ángulo recto."},
+  lag_diam:{n:"Lagartijas diamante", m:"cam", j:"elbow", down:95, up:150, tip:"Cámara de lado, en el piso."},
+  fondos:{n:"Fondos entre dos sillas", m:"cam", j:"elbow", down:95, up:150, tip:"Cámara de lado. Baja hasta que el codo quede a 90°."},
+  lag_pausa:{n:"Lagartija con pausa 3 seg", m:"cam", j:"elbow", down:95, up:150, tip:"Aguanta 3 segundos abajo. La app cuenta al subir."},
+  dominadas:{n:"Dominadas o negativas", m:"cam", j:"elbow", down:85, up:145, note:"en el columpio", tip:"Cámara de frente o de lado, que se vean brazos y cabeza. Si no salen, haz negativas y suma con +1."},
+  remo:{n:"Remo invertido bajo la barra", m:"cam", j:"elbow", down:95, up:150, tip:"Cámara de lado. Cuenta cuando jalas el pecho a la barra y bajas."},
+  curl:{n:"Curl con barra 10 kg", m:"cam", j:"elbow", down:60, up:140, tip:"De lado a la cámara. Sube la barra completa y baja hasta estirar el brazo."},
+  rodillas:{n:"Colgado subiendo rodillas", m:"cam", j:"hip", down:105, up:150, tip:"Cámara de lado. Rodillas al pecho y vuelves a estirar."},
+  caminata:{n:"Caminata tranquila", m:"time", secs:900, tip:"15 minutos tranquilo. Nada de trote fuerte."},
+  pmr:{n:"Peso muerto rumano con barra", m:"cam", j:"hip", down:115, up:160, note:"baja lento", tip:"De lado. Baja la barra con la espalda recta y sube apretando glúteo."},
+  sumo:{n:"Sentadilla sumo", m:"cam", j:"knee", down:105, up:155, note:"pies abiertos", tip:"Mejor de frente a la cámara, con los pies abiertos."},
+  zancada_tras:{n:"Zancada trasera", m:"cam", j:"knee", down:105, up:150, note:"por pierna", tip:"De lado a la cámara."},
+  puente1:{n:"Puente de glúteo a una pierna", m:"cam", j:"hip", down:140, up:162, note:"por lado", tip:"Cámara de lado y a ras del suelo."},
+  saltos:{n:"Saltos a escalón", m:"man", tip:"Cuenta tú con +1. Cae suave."},
+  lagartijas:{n:"Lagartijas al máximo", m:"cam", j:"elbow", down:95, up:150, max:true, tip:"Las que salgan. La meta es superar tu récord."},
+  sentadilla12:{n:"Sentadilla con barra", m:"cam", j:"knee", down:100, up:155, tip:"De lado a la cámara."},
+  dominadas_max:{n:"Dominadas o colgado", m:"cam", j:"elbow", down:85, up:145, max:true, tip:"Las que salgan. Si te cuelgas sin subir, guarda la serie con +1 por cada 10 segundos."},
+  plancha:{n:"Plancha", m:"time", secs:45, tip:"Cuerpo recto, abdomen apretado."}
+};
+// 0=domingo
+const PLAN = {
+  1:{t:"Pierna y glúteo", ex:[["sentadilla",5,8],["bulgara",3,10],["hipthrust",5,8],["zancadas",3,20],["pantorrilla",4,20]]},
+  2:{t:"Pecho y tríceps", ex:[["lag_decl",4,10],["lag_diam",3,12],["fondos",4,8],["lag_pausa",3,8]]},
+  3:{t:"Espalda y bíceps", ex:[["dominadas",4,8],["remo",4,8],["curl",4,12],["rodillas",3,10]]},
+  4:{t:"Día activo", active:true, ex:[["caminata",1,900]]},
+  5:{t:"Pierna v2", ex:[["pmr",5,8],["sumo",4,10],["zancada_tras",3,10],["puente1",3,15],["saltos",3,10]]},
+  6:{t:"Full body corto", ex:[["lagartijas",3,15],["sentadilla12",3,12],["dominadas_max",3,6],["plancha",3,45]]},
+  0:{t:"Descanso total", rest:true, ex:[]}
+};
+const TRAIN_DAYS = [1,2,3,5,6];
+const DOW = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DOW_LONG = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const TITLES = [[1,"Novato del patio"],[3,"Constante"],[5,"Fierro"],[8,"Máquina"],[12,"Bestia"],[16,"Leyenda del columpio"]];
+
+// ---------- Estado ----------
+let state = {v:1, log:{}, claimed:{}};
+let db = null, docRef = null, saveTimer = null;
+const LS = "fierro-en-casa-v1";
+function lsGet(){ try { const s = localStorage.getItem(LS); return s ? JSON.parse(s) : null; } catch(e){ return null; } }
+function lsSet(){ try { localStorage.setItem(LS, JSON.stringify(state)); } catch(e){} }
+function save(){
+  lsSet();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    if (!docRef) return;
+    try { await docRef.set({data: JSON.stringify(state), at: new Date().toISOString()}); }
+    catch(e){ $("syncNote").textContent = "No se pudo guardar en línea; quedó guardado en este cel."; }
+  }, 600);
+}
+function merge(a, b){ // une dos estados quedándose con lo mayor
+  const out = {v:1, log:{}, claimed:{}};
+  for (const src of [a,b]) { if (!src) continue;
+    for (const d in (src.log||{})) { out.log[d] = out.log[d] || {};
+      for (const e in src.log[d]) { const cur = out.log[d][e] || {sets:[], cam:0}; const s = src.log[d][e];
+        const len = Math.max(cur.sets.length, (s.sets||[]).length); const sets = [];
+        for (let i=0;i<len;i++) sets[i] = Math.max(cur.sets[i]||0, (s.sets||[])[i]||0);
+        out.log[d][e] = {sets, cam: Math.max(cur.cam||0, s.cam||0)}; } }
+    for (const w in (src.claimed||{})) out.claimed[w] = Array.from(new Set([...(out.claimed[w]||[]), ...src.claimed[w]])); }
+  return out;
+}
+
+// ---------- Fechas ----------
+const pad = n => String(n).padStart(2,"0");
+const key = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const today = () => { const d = new Date(); d.setHours(12,0,0,0); return d; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const monday = d => addDays(d, -((d.getDay()+6)%7));
+function isoWeek(d){ const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-day); const y0 = new Date(Date.UTC(t.getUTCFullYear(),0,1)); return t.getUTCFullYear()+"-W"+pad(Math.ceil(((t-y0)/864e5+1)/7)); }
+
+// ---------- Cálculos ----------
+function setsDone(dateKey, exId){ return ((state.log[dateKey]||{})[exId]||{sets:[]}).sets; }
+function setComplete(exId, target, val){ const e = EX[exId]; if (!val) return false; return e.max ? val > 0 : val >= target; }
+function dayProgress(d){
+  const p = PLAN[d.getDay()]; const k = key(d); let tot = 0, ok = 0;
+  for (const [id, n, t] of p.ex) { const s = setsDone(k,id); for (let i=0;i<n;i++){ tot++; if (setComplete(id,t,s[i])) ok++; } }
+  return {tot, ok, pct: tot ? ok/tot : 0, complete: tot>0 && ok===tot, any: Object.keys(state.log[k]||{}).length>0};
+}
+function totals(){
+  let xp = 0, reps = 0, daysDone = 0;
+  for (const k in state.log) {
+    const d = new Date(k+"T12:00:00"); const p = PLAN[d.getDay()]; const targets = {}; for (const [id,n,t] of p.ex) targets[id]=t;
+    for (const id in state.log[k]) { const e = EX[id]; if (!e) continue; for (const v of state.log[k][id].sets) { if (!v) continue;
+      if (e.m==="time") xp += Math.round(v/5); else { xp += v; reps += v; }
+      if (targets[id]!==undefined && setComplete(id, targets[id], v)) xp += 10; } }
+    if (dayProgress(d).complete) { xp += 50; daysDone++; }
+  }
+  for (const w in state.claimed) xp += 150*state.claimed[w].length;
+  return {xp, reps, daysDone};
+}
+function levelOf(xp){ let n = 1; while (xp >= 75*n*(n+1)) n++; const base = 75*(n-1)*n, next = 75*n*(n+1); return {n, into: xp-base, span: next-base, left: next-xp}; }
+function titleOf(n){ let t = TITLES[0][1]; for (const [m,s] of TITLES) if (n>=m) t = s; return t; }
+function streaks(){
+  const t = today(); let cur = 0, best = 0, run = 0, counting = true;
+  const keys = Object.keys(state.log).sort(); const start = keys.length ? new Date(keys[0]+"T12:00:00") : t;
+  for (let d = new Date(start); d <= t; d = addDays(d,1)) { if (!TRAIN_DAYS.includes(d.getDay())) continue;
+    const c = dayProgress(d).complete; if (c) { run++; best = Math.max(best, run); } else if (key(d)!==key(t)) run = 0; }
+  cur = run; return {cur, best};
+}
+function bestBefore(exId, beforeKey){ let b = 0; for (const k in state.log) if (k < beforeKey && state.log[k][exId]) for (const v of state.log[k][exId].sets) b = Math.max(b, v||0); return b; }
+
+// ---------- Retos ----------
+const CH = [
+  {id:"dias5", t:"Entrena los 5 días", unit:"días", goal:5, f:w=>w.days},
+  {id:"reps300", t:"300 repeticiones en la semana", unit:"reps", goal:300, f:w=>w.reps},
+  {id:"lag100", t:"100 lagartijas (cualquier tipo)", unit:"lagartijas", goal:100, f:w=>w.push},
+  {id:"sent150", t:"150 sentadillas (normal, sumo o búlgara)", unit:"sentadillas", goal:150, f:w=>w.squat},
+  {id:"plancha3", t:"3 minutos de plancha en total", unit:"seg", goal:180, f:w=>w.plank},
+  {id:"dom20", t:"20 dominadas o negativas", unit:"dominadas", goal:20, f:w=>w.pull},
+  {id:"cam10", t:"Cuenta 10 series con la cámara", unit:"series", goal:10, f:w=>w.cam},
+  {id:"record", t:"Rompe un récord personal", unit:"récord", goal:1, f:w=>w.pr}
+];
+function weekStats(){
+  const m = monday(today()); const w = {days:0,reps:0,push:0,squat:0,plank:0,pull:0,cam:0,pr:0};
+  const mk = key(m);
+  for (let i=0;i<7;i++){ const d = addDays(m,i); const k = key(d); if (TRAIN_DAYS.includes(d.getDay()) && dayProgress(d).complete) w.days++;
+    for (const id in (state.log[k]||{})) { const s = state.log[k][id]; const sum = s.sets.reduce((a,b)=>a+(b||0),0); const e = EX[id]; if (!e) continue;
+      w.cam += s.cam||0;
+      if (e.m==="time") { if (id==="plancha") w.plank += sum; continue; }
+      w.reps += sum;
+      if (/^lag/.test(id)) w.push += sum;
+      if (["sentadilla","sentadilla12","sumo","bulgara"].includes(id)) w.squat += sum;
+      if (/^dominadas/.test(id)) w.pull += sum;
+      const prev = bestBefore(id, mk); if (prev>0 && Math.max(...s.sets.map(v=>v||0)) > prev) w.pr = 1; } }
+  return w;
+}
+function weekChallenges(){ const wk = isoWeek(today()); const num = parseInt(wk.split("W")[1],10); const out = []; for (let i=0;i<3;i++) out.push(CH[(num*3+i)%CH.length]); return out; }
+
+// ---------- Render ----------
+const $ = id => document.getElementById(id);
+let selDate = today();
+function renderBoard(){
+  const t = totals(); const L = levelOf(t.xp); const s = streaks();
+  $("lvlNum").textContent = L.n; $("lvlTitle").textContent = titleOf(L.n);
+  $("xpBar").style.width = Math.round(100*L.into/L.span)+"%"; $("xpNow").textContent = t.xp.toLocaleString("es-MX"); $("xpLeft").textContent = L.left.toLocaleString("es-MX");
+  $("streak").textContent = s.cur;
+  $("stDays").textContent = t.daysDone; $("stReps").textContent = t.reps.toLocaleString("es-MX"); $("stBest").textContent = s.best;
+  return L.n;
+}
+function renderDays(){
+  const m = monday(today()); const box = $("days"); box.innerHTML = "";
+  for (let i=0;i<7;i++){ const d = addDays(m,i); const p = PLAN[d.getDay()]; const pr = dayProgress(d);
+    const b = document.createElement("button"); b.className = "day"; b.setAttribute("role","tab");
+    if (p.rest) b.classList.add("rest"); else if (pr.complete) b.classList.add("done"); else if (pr.ok>0) b.classList.add("part");
+    if (key(d)===key(selDate)) { b.classList.add("sel"); b.setAttribute("aria-selected","true"); }
+    if (key(d)===key(today())) b.classList.add("today");
+    b.innerHTML = "<b>"+DOW[d.getDay()]+"</b><span class='num' style='font-size:15px;font-weight:800'>"+d.getDate()+"</span><i></i>";
+    b.onclick = () => { selDate = d; renderHoy(); };
+    box.appendChild(b); }
+}
+function renderHoy(){
+  renderDays();
+  const d = selDate; const p = PLAN[d.getDay()]; const k = key(d); const isToday = k===key(today());
+  $("dayEyebrow").textContent = isToday ? "Hoy · "+DOW_LONG[d.getDay()] : DOW_LONG[d.getDay()]+" "+d.getDate();
+  $("dayTitle").textContent = p.t;
+  const pr = dayProgress(d); $("dayPct").textContent = Math.round(pr.pct*100)+"%";
+  const list = $("exList"); list.innerHTML = "";
+  if (p.rest) { list.innerHTML = "<div class='restcard'><h3>Descanso total</h3>El músculo crece cuando descansas. Come bien y duerme 7 a 8 horas. Tu racha no se rompe.</div>"; return; }
+  const future = d > today();
+  for (const [id, n, t] of p.ex) {
+    const e = EX[id]; const s = setsDone(k,id);
+    const card = document.createElement("div"); card.className = "ex";
+    const allOk = Array.from({length:n},(_,i)=>setComplete(id,t,s[i])).every(Boolean); if (allOk) card.classList.add("complete");
+    const tgtTxt = e.m==="time" ? (t>=60 ? (t/60)+" min" : t+" seg") : (e.max ? "al máximo" : t+" reps");
+    const tag = e.m==="cam" ? "<span class='tag cam'>cámara</span>" : e.m==="time" ? "<span class='tag time'>tiempo</span>" : "<span class='tag man'>manual</span>";
+    const rec = e.m!=="time" ? bestBefore(id, "9999") : 0;
+    card.innerHTML = "<div class='exrow'><div><h3></h3><p></p></div>"+tag+"</div><div class='sets'></div>";
+    card.querySelector("h3").textContent = e.n;
+    card.querySelector("p").textContent = n+" × "+tgtTxt+(e.note ? " · "+e.note : "")+(rec ? " · récord "+rec : "");
+    const sets = card.querySelector(".sets");
+    for (let i=0;i<n;i++){ const v = s[i]||0; const b = document.createElement("button"); b.className = "set";
+      if (setComplete(id,t,v)) b.classList.add("ok"); else if (v>0) b.classList.add("half");
+      const shown = e.m==="time" ? (v ? fmtT(v) : "–") : (v || "–");
+      b.innerHTML = "<span class='num'></span><small>serie "+(i+1)+"</small>"; b.querySelector(".num").textContent = shown;
+      b.setAttribute("aria-label", e.n+", serie "+(i+1)+(v? ", "+v+" hechas":", sin hacer"));
+      if (future) { b.disabled = true; b.title = "Todavía no llega este día"; }
+      b.onclick = () => openCounter(k, id, i, n, t);
+      sets.appendChild(b); }
+    list.appendChild(card);
+  }
+}
+function renderRetos(){
+  const w = weekStats(); const wk = isoWeek(today()); const claimed = state.claimed[wk]||[]; const box = $("chalList"); box.innerHTML = "";
+  const m = monday(today()); $("weekLabel").textContent = "Semana del "+m.getDate()+" al "+addDays(m,6).getDate();
+  for (const c of weekChallenges()) { const v = Math.min(c.f(w), c.goal); const done = v>=c.goal; const got = claimed.includes(c.id);
+    const el = document.createElement("div"); el.className = "chal"+(got?" claimed":"");
+    el.innerHTML = "<div class='top'><b></b><span class='num' style='font-size:20px;font-weight:800'></span></div><div class='bar'><i></i></div><div></div>";
+    el.querySelector("b").textContent = c.t; el.querySelector(".num").textContent = v+" / "+c.goal;
+    el.querySelector(".bar i").style.width = Math.round(100*v/c.goal)+"%";
+    const slot = el.lastChild;
+    if (got) slot.innerHTML = "<span class='hint' style='color:var(--good);font-weight:700'>Cobrado · +150 XP</span>";
+    else { const b = document.createElement("button"); b.className = "btn "+(done?"primary":"ghost"); b.disabled = !done; b.textContent = done ? "Cobrar +150 XP" : "Faltan "+(c.goal-v)+" "+c.unit; b.style.width="100%";
+      b.onclick = () => { state.claimed[wk] = [...claimed, c.id]; save(); refresh(); toast("¡Reto cobrado! +150 XP"); }; slot.appendChild(b); }
+    box.appendChild(el); }
+}
+function renderProg(){
+  const cal = $("cal"); cal.innerHTML = ""; const t = today(); const start = addDays(monday(t), -21);
+  for (let i=0;i<28;i++){ const d = addDays(start,i); const c = document.createElement("div"); c.textContent = d.getDate();
+    const p = PLAN[d.getDay()]; const pr = dayProgress(d);
+    if (d > t) c.className = "c-future"; else if (p.rest || (p.active && !pr.complete)) c.className = "c-rest"; else if (pr.complete) c.className = "c-done"; else if (pr.ok>0) c.className = "c-part";
+    if (key(d)===key(t)) c.classList.add("c-today"); cal.appendChild(c); }
+  const recs = $("recs"); recs.innerHTML = ""; const rows = [];
+  for (const id in EX) { if (EX[id].m==="time") continue; const b = bestBefore(id,"9999"); if (b) rows.push([EX[id].n,b]); }
+  if (!rows.length) recs.innerHTML = "<div class='hint' style='border:0'>Aquí van a salir tus mejores series cuando empieces a contar.</div>";
+  rows.sort((a,b)=>b[1]-a[1]).forEach(([n,b]) => { const r = document.createElement("div"); r.innerHTML = "<span></span><span class='num'></span>"; r.firstChild.textContent = n; r.lastChild.textContent = b; recs.appendChild(r); });
+}
+let lastLevel = null;
+function refresh(){ const n = renderBoard(); if (lastLevel!==null && n>lastLevel) toast("¡Subiste a nivel "+n+"! "+titleOf(n)); lastLevel = n; renderHoy(); renderRetos(); renderProg(); }
+const fmtT = s => s>=60 ? Math.floor(s/60)+":"+pad(s%60) : s+"s";
+let toastT; function toast(m){ const t = $("toast"); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(()=>t.hidden=true, 2600); }
+
+// Pestañas
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x===b ? "true":"false"));
+  ["viewHoy","viewRetos","viewProg"].forEach(v => $(v).hidden = v!==b.dataset.view); window.scrollTo(0,0); });
+
+// ---------- Contador ----------
+const video = $("video"), canvas = $("canvas"), ctx = canvas.getContext("2d"), stage = $("stage");
+let C = null; // sesión del contador
+let landmarker = null, loading = null, stream = null, rafId = 0, wake = null, audio = null;
+function status(t, cls){ const s = $("cStatus"); s.textContent = t||""; s.className = "status"+(cls?" "+cls:""); }
+function openCounter(k, id, idx, n, t){
+  const e = EX[id]; const prev = setsDone(k,id)[idx]||0;
+  C = {k, id, idx, n, t, e, count: e.m==="time" ? prev : prev, cam:false, phase:"up", ema:null, lastTs:0, timer:null};
+  $("cName").textContent = e.n; $("cSet").textContent = "Serie "+(idx+1)+" de "+n+(e.note? " · "+e.note : "");
+  $("cTip").textContent = e.tip||"";
+  $("camBtns").hidden = e.m!=="cam"; $("timeBtns").hidden = e.m!=="time";
+  $("idle").hidden = false; stage.classList.remove("mirror"); $("idle").innerHTML = IDLE_HTML;
+  if (e.m==="time") { $("idle").innerHTML = "<div class='timerbig' id='tBig'></div>"; }
+  else $("idleText").textContent = e.m==="cam" ? "Pon el cel a 2 o 3 metros y que se vea todo tu cuerpo. Luego toca Cámara en vivo o Grabar serie." : "Este ejercicio se cuenta a mano con +1.";
+  $("bTime").textContent = "Empezar";
+  $("bMinus").textContent = e.m==="time" ? "−5s" : "−1"; $("bPlus").textContent = e.m==="time" ? "+5s" : "+1";
+  status(e.m==="cam" ? "" : e.m==="time" ? "Toca Empezar y aguanta." : "");
+  $("counter").hidden = false; document.body.style.overflow = "hidden";
+  paintCount();
+}
+function closeCounter(){ stopAll(); $("counter").hidden = true; document.body.style.overflow = ""; C = null;
+  // restaura la figura del área de cámara
+  $("idle").innerHTML = IDLE_HTML; }
+const IDLE_HTML = $("idle").innerHTML;
+function paintCount(){
+  if (!C) return; const e = C.e;
+  if (e.m==="time") { const left = Math.max(0, C.t - C.count); $("cCount").textContent = C.count; $("cTarget").textContent = C.t; $("cLeft").textContent = left; const tb = $("tBig"); if (tb) tb.textContent = fmtT(left); $("ovl").querySelector(".left").lastChild.textContent = "seg faltan"; return; }
+  $("ovl").querySelector(".left").lastChild.textContent = e.max ? "récord" : "faltan";
+  $("cCount").textContent = C.count; $("cTarget").textContent = e.max ? "máx" : C.t;
+  if (e.max) $("cLeft").textContent = bestBefore(C.id,"9999") || "–"; else $("cLeft").textContent = Math.max(0, C.t - C.count);
+}
+function beep(f=880, d=.09){ try { audio = audio || new (window.AudioContext||window.webkitAudioContext)(); const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = f; g.gain.value = .15; o.connect(g); g.connect(audio.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001, audio.currentTime+d); o.stop(audio.currentTime+d+.02); } catch(e){} }
+function say(t){ try { const u = new SpeechSynthesisUtterance(t); u.lang = "es-MX"; u.rate = 1.15; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e){} }
+function addRep(src){
+  if (!C) return; C.count++; if (src==="cam") C.cam = true; beep(); try{ navigator.vibrate && navigator.vibrate(40); }catch(e){}
+  const left = C.t - C.count;
+  if (!C.e.max && left===0) { beep(1320,.25); say("¡Serie completa!"); status("¡Serie completa! Toca Guardar serie.", "ok"); stage.classList.add("done-flash"); setTimeout(()=>stage.classList.remove("done-flash"),800); }
+  else if (!C.e.max && left>0 && left<=3) say("faltan "+left);
+  else if (src==="cam") say(String(C.count));
+  paintCount();
+}
+$("bPlus").onclick = () => { if (!C) return; if (C.e.m==="time") { C.count = Math.min(C.count+5, 3600); paintCount(); } else addRep("man"); };
+$("bMinus").onclick = () => { if (!C) return; C.count = Math.max(0, C.count - (C.e.m==="time"?5:1)); paintCount(); };
+$("cClose").onclick = closeCounter;
+$("bSave").onclick = () => {
+  if (!C) return; const {k,id,idx,count,cam} = C;
+  state.log[k] = state.log[k]||{}; const rec = state.log[k][id] || {sets:[], cam:0};
+  const prevBest = bestBefore(id,"9999");
+  rec.sets[idx] = count; if (cam) rec.cam = (rec.cam||0)+1; state.log[k][id] = rec; save();
+  const wasMax = C.e.m!=="time" && count>prevBest && prevBest>0;
+  closeCounter(); refresh();
+  toast(wasMax ? "¡Nuevo récord! "+count+" reps" : count ? "Serie guardada · +"+(count+ (setComplete(id, PLAN[new Date(k+"T12:00:00").getDay()].ex.find(x=>x[0]===id)[2], count)?10:0))+" XP" : "Serie guardada");
+};
+// Temporizador
+$("bTime").onclick = () => {
+  if (!C) return;
+  if (C.timer) { clearInterval(C.timer); C.timer = null; $("bTime").textContent = "Seguir"; return; }
+  $("bTime").textContent = "Pausa"; beep(660);
+  C.timer = setInterval(() => { if (!C) return; C.count++; paintCount(); const left = C.t - C.count;
+    if (left>0 && left<=3) beep(700,.05);
+    if (left<=0) { clearInterval(C.timer); C.timer = null; beep(1320,.3); say("¡Listo!"); status("¡Listo! Toca Guardar serie.","ok"); $("bTime").textContent = "Empezar"; } }, 1000);
+};
+
+// Detector de pose (MediaPipe, archivos publicados junto a la página)
+async function loadModel(){
+  if (landmarker) return landmarker; if (loading) return loading;
+  status("Cargando el detector de movimiento (la primera vez tarda unos segundos)…");
+  loading = (async () => {
+    const u = p => new URL(p, document.baseURI).href;
+    const mod = await import(u("lib/vision_bundle.mjs"));
+    const fs = {wasmLoaderPath: u("wasm/vision_wasm_internal.js"), wasmBinaryPath: u("wasm/vision_wasm_internal.wasm")};
+    const buf = new Uint8Array(await (await fetch(u("models/pose_lite.mp4"))).arrayBuffer());
+    const opts = d => ({baseOptions:{modelAssetBuffer:buf, delegate:d}, runningMode:"VIDEO", numPoses:1, minPoseDetectionConfidence:.5, minTrackingConfidence:.5});
+    try { landmarker = await mod.PoseLandmarker.createFromOptions(fs, opts("GPU")); }
+    catch(e){ landmarker = await mod.PoseLandmarker.createFromOptions(fs, opts("CPU")); }
+    status(""); return landmarker;
+  })();
+  try { return await loading; } catch(e){ loading = null; status("No se pudo cargar el detector. Cuenta con +1 mientras tanto.", "err"); throw e; }
+}
+const SIDES = {L:{sh:11,el:13,wr:15,hip:23,kn:25,an:27}, R:{sh:12,el:14,wr:16,hip:24,kn:26,an:28}};
+const BONES = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32]];
+function ang(a,b,c){ const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y]; const dot=v1[0]*v2[0]+v1[1]*v2[1]; const m=Math.hypot(...v1)*Math.hypot(...v2)||1; return Math.acos(Math.max(-1,Math.min(1,dot/m)))*180/Math.PI; }
+function triple(lm, side, j){ const s = SIDES[side]; return j==="knee" ? [lm[s.hip],lm[s.kn],lm[s.an]] : j==="elbow" ? [lm[s.sh],lm[s.el],lm[s.wr]] : [lm[s.sh],lm[s.hip],lm[s.kn]]; }
+function vis(p){ return p.visibility===undefined ? 1 : p.visibility; }
+function processFrame(res){
+  const w = canvas.width, h = canvas.height; ctx.clearRect(0,0,w,h);
+  const lm = res && res.landmarks && res.landmarks[0];
+  if (!lm) { status("No te veo. Aléjate un poco para que salga todo tu cuerpo."); return; }
+  const e = C.e;
+  const tl = triple(lm,"L",e.j), tr = triple(lm,"R",e.j);
+  const vl = tl.reduce((a,p)=>a+vis(p),0), vr = tr.reduce((a,p)=>a+vis(p),0);
+  const tri = vl>=vr ? tl : tr; const v = Math.max(vl,vr)/3;
+  // líneas del cuerpo
+  const lw = Math.max(3, w/140);
+  ctx.lineCap = "round"; ctx.lineWidth = lw; ctx.strokeStyle = "rgba(255,255,255,.75)";
+  for (const [a,b] of BONES) { if (vis(lm[a])<.4||vis(lm[b])<.4) continue; ctx.beginPath(); ctx.moveTo(lm[a].x*w,lm[a].y*h); ctx.lineTo(lm[b].x*w,lm[b].y*h); ctx.stroke(); }
+  ctx.strokeStyle = "#ff6a3d"; ctx.lineWidth = lw*1.8; ctx.beginPath(); ctx.moveTo(tri[0].x*w,tri[0].y*h); ctx.lineTo(tri[1].x*w,tri[1].y*h); ctx.lineTo(tri[2].x*w,tri[2].y*h); ctx.stroke();
+  ctx.fillStyle = "#fff"; for (const i of [11,12,13,14,15,16,23,24,25,26,27,28]) { if (vis(lm[i])<.4) continue; ctx.beginPath(); ctx.arc(lm[i].x*w,lm[i].y*h,lw*1.2,0,7); ctx.fill(); }
+  if (v < .45) { status("Se te ven poco "+(e.j==="elbow"?"los brazos":e.j==="knee"?"las piernas":"la cadera y piernas")+". Ponte de lado y aléjate."); return; }
+  const a = ang(...tri); C.ema = C.ema===null ? a : C.ema*.55 + a*.45;
+  // ángulo junto a la articulación (contrarrestando el espejo)
+  const jx = tri[1].x*w, jy = tri[1].y*h; ctx.save(); ctx.translate(jx,jy); if (stage.classList.contains("mirror")) ctx.scale(-1,1);
+  ctx.font = "800 "+Math.round(w/16)+"px 'Big Shoulders Display', sans-serif"; ctx.fillStyle = "#ffb199"; ctx.fillText(Math.round(C.ema)+"°", 12, -12); ctx.restore();
+  if (C.phase==="up" && C.ema < e.down) { C.phase = "down"; status("¡Abajo! Ahora sube.", ""); }
+  else if (C.phase==="down" && C.ema > e.up) { C.phase = "up"; addRep("cam"); if (!(!e.max && C.count>=C.t)) status("¡Bien! Sigue."); }
+}
+function fitCanvas(){ if (video.videoWidth) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; } }
+function loop(){
+  if (!C || !landmarker) return;
+  if (video.readyState >= 2 && !video.paused && video.currentTime !== C.lastTs) {
+    C.lastTs = video.currentTime; if (canvas.width !== video.videoWidth) fitCanvas();
+    try { const ts = performance.now(); processFrame(landmarker.detectForVideo(video, ts)); } catch(err){ }
+  }
+  rafId = requestAnimationFrame(loop);
+}
+function stopAll(){
+  cancelAnimationFrame(rafId); if (C && C.timer) clearInterval(C.timer);
+  if (stream) { stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  try { video.pause(); } catch(e){}
+  if (video.src && video.src.startsWith("blob:")) URL.revokeObjectURL(video.src);
+  video.removeAttribute("src"); video.srcObject = null; ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (wake) { try{ wake.release(); }catch(e){} wake = null; }
+}
+$("bLive").onclick = async () => {
+  if (!C) return; stopAll(); beep(440,.01);
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { status("Aquí no se puede abrir la cámara en vivo. Usa Grabar serie: grabas tu serie y yo la cuento.", "err"); return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:640}, height:{ideal:480}}, audio:false}); }
+  catch(e){ status("La cámara en vivo está bloqueada en esta vista. Toca Grabar serie: grabas con tu cámara y la app cuenta las repeticiones del video.", "err"); return; }
+  try { await loadModel(); } catch(e){ stopAll(); return; }
+  video.srcObject = stream; video.muted = true; stage.classList.add("mirror"); $("idle").hidden = true;
+  try { await video.play(); } catch(e){}
+  try { wake = await navigator.wakeLock.request("screen"); } catch(e){}
+  C.phase = "up"; C.ema = null; fitCanvas(); status("Te estoy viendo. ¡Empieza!"); say("Empieza"); loop();
+};
+$("fileVid").onchange = async ev => {
+  const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f || !C) return; stopAll(); beep(440,.01);
+  try { await loadModel(); } catch(e){ return; }
+  video.srcObject = null; video.src = URL.createObjectURL(f); video.muted = true; video.playbackRate = 1;
+  stage.classList.remove("mirror"); $("idle").hidden = true; C.phase = "up"; C.ema = null;
+  status("Revisando tu video y contando…");
+  video.onloadedmetadata = () => fitCanvas();
+  video.onended = () => { cancelAnimationFrame(rafId); status("Conté "+C.count+". Si me faltó o sobró alguna, ajusta con −1 / +1 y guarda.", "ok"); };
+  try { await video.play(); } catch(e){ status("No pude reproducir ese video. Intenta grabarlo otra vez.", "err"); return; }
+  loop();
+};
+
+// ---------- Arranque ----------
+const local = lsGet(); if (local) state = merge(state, local);
+refresh();
+setInterval(() => { if ($("counter").hidden) { const k = key(today()); if (k !== refresh._k) { refresh._k = k; selDate = today(); refresh(); } } }, 60000); refresh._k = key(today());
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [dbx, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    const uid = user && await user.id(); if (!dbx || !uid) return;
+    db = dbx; docRef = db.doc("data/users/"+uid+"/progreso");
+    const snap = await docRef.get(); const remote = snap.exists ? JSON.parse(snap.data().data||"null") : null;
+    state = merge(state, remote); lsSet(); refresh();
+    $("syncNote").textContent = "Tu progreso se guarda en tu cuenta: lo ves igual en el cel o en la compu.";
+    if (!remote || JSON.stringify(remote)!==JSON.stringify(state)) save();
+  } catch(e){ /* sigue funcionando con el guardado del cel */ }
+})();
+})();
+</script>
+
+</body></html>
